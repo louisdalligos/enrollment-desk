@@ -1,0 +1,13 @@
+Employee ID,First Name,Last Name,Birth Date,Sex,Relationship,Principal ID,Hire Date,Plan,Department,Remarks
+ALN-20203,Andres,Domingo,"December 16, 1974",M,Employee,,"October 08, 2026",BRONZE,Operations,
+ALN-20203,Andres,Domingo,"December 16, 1974",M,Employee,,"October 08, 2026",BRONZE,Operations,
+ALN-20204,Gabriel,Mercado,"June 20, 1986",M,Employee,,"October 27, 2026",BRONZE,Operations,
+,Paolo,Mercado,"January 19, 2019",M,Child,ALN-20204,,,Operations,
+,Joanna,Mercado,"May 28, 2026",F,Child,ALN-20204,,,Operations,
+ALN-20205,Miguel,Pascual,"March 15, 1976",M,Employee,,"September 30, 2026",BRONZE,Operations,
+,Camille,Pascual,"January 08, 1983",F,Spouse,ALN-20205,,,Operations,
+,Mark,Pascual,"March 15, 2024",M,Child,ALN-20205,,,Operations,
+ALN-20206,Rhea,Domingo,"April 08, 1992",F,Employee,,"October 20, 2026",SILVER,Operations,
+,Juan,Domingo,"June 26, 1987",M,Spouse,ALN-20206,,,Operations,
+,Rafael,Domingo,"August 24, 1973",M,Parent,ALN-20206,,,Operations,
+,Gabriel,Mercado,"August 29, 1968",M,Parent,ALN-20204,,,Operations,

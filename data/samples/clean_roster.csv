@@ -1,0 +1,7 @@
+Employee ID,First Name,Last Name,Birth Date,Sex,Relationship,Principal ID,Hire Date,Plan
+DLS-30001,Andrea,Villanueva,1994-06-12,F,Employee,,2026-10-01,GOLD
+,Paolo,Villanueva,1993-02-03,M,Spouse,DLS-30001,,
+,Bea,Villanueva,2021-09-15,F,Child,DLS-30001,,
+DLS-30002,Carlo,Mendoza,1998-11-30,M,Employee,,2026-10-12,SILVER
+DLS-30003,Grace,Soriano,1989-04-22,F,Employee,,2026-10-20,SILVER
+,Liza,Soriano,1963-08-09,F,Parent,DLS-30003,,

@@ -1,0 +1,9 @@
+Mayon Builders Co. - HMO Enrollment List
+
+Staff ID,fname,lname,Date of Birth,gender,rel,principal employee id,employment date,plan code,Department,Remarks
+,RAMON,REYES,"February 19, 2004",M,Husband,MYN-10006,,,Operations,
+,ANDRES,REYES,"March 31, 2021",M,Son,MYN-10006,,,Operations,
+,NOEL,MERCADO,"January 01, 2001",M,Husband,MYN-10002,,,Operations,
+,ANDRES,MERCADO,"August 17, 2006",M,Son,MYN-10002,,,Operations,
+,JOANNA,MERCADO,"April 09, 2010",F,Daughter,MYN-10002,,,Operations,
+,PAOLO,MERCADO,"June 03, 2013",M,Son,MYN-10002,,,Operations,

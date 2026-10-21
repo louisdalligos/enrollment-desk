@@ -1,0 +1,82 @@
+{
+  "Comment": "Enrollment and endorsement workflow. AI never changes case state here; coverage goes active only on an insurer acknowledgment. Keep in step with src/enrollment_desk/workflow/local_runner.py.",
+  "StartAt": "Intake",
+  "States": {
+    "Intake": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": { "FunctionName": "${intake_arn}", "Payload.$": "$" },
+      "OutputPath": "$.Payload",
+      "Retry": [{ "ErrorEquals": ["Lambda.ServiceException", "Lambda.TooManyRequestsException"], "IntervalSeconds": 2, "MaxAttempts": 3, "BackoffRate": 2 }],
+      "Next": "Validate"
+    },
+    "Validate": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": { "FunctionName": "${validate_arn}", "Payload.$": "$" },
+      "OutputPath": "$.Payload",
+      "Retry": [{ "ErrorEquals": ["Lambda.ServiceException", "Lambda.TooManyRequestsException"], "IntervalSeconds": 2, "MaxAttempts": 3, "BackoffRate": 2 }],
+      "Next": "AllClear"
+    },
+    "AllClear": {
+      "Type": "Choice",
+      "Choices": [{ "Variable": "$.all_clear", "BooleanEquals": true, "Next": "SubmitToInsurer" }],
+      "Default": "NeedsReview"
+    },
+    "SubmitToInsurer": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": { "FunctionName": "${submit_arn}", "Payload.$": "$" },
+      "OutputPath": "$.Payload",
+      "Retry": [
+        { "ErrorEquals": ["InsurerUnavailable"], "IntervalSeconds": 30, "MaxAttempts": 2, "BackoffRate": 2 },
+        { "ErrorEquals": ["Lambda.ServiceException", "Lambda.TooManyRequestsException"], "IntervalSeconds": 2, "MaxAttempts": 3, "BackoffRate": 2 }
+      ],
+      "Catch": [{ "ErrorEquals": ["States.ALL"], "ResultPath": "$.error", "Next": "SubmitFailed" }],
+      "Next": "WaitForAck"
+    },
+    "SubmitFailed": {
+      "Type": "Pass",
+      "Parameters": { "case_id.$": "$.case_id", "reason": "Insurer unavailable after retries" },
+      "Next": "NeedsReview"
+    },
+    "WaitForAck": { "Type": "Wait", "Seconds": 60, "Next": "CheckAck" },
+    "CheckAck": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": { "FunctionName": "${check_ack_arn}", "Payload.$": "$" },
+      "OutputPath": "$.Payload",
+      "Retry": [{ "ErrorEquals": ["States.ALL"], "IntervalSeconds": 10, "MaxAttempts": 3, "BackoffRate": 2 }],
+      "Next": "AckResult"
+    },
+    "AckResult": {
+      "Type": "Choice",
+      "Choices": [
+        { "Variable": "$.ack_status", "StringEquals": "acknowledged", "Next": "MarkActive" },
+        { "Variable": "$.ack_status", "StringEquals": "rejected", "Next": "NeedsReview" },
+        { "Variable": "$.polls", "NumericGreaterThanEquals": 10, "Next": "NoReply" }
+      ],
+      "Default": "WaitForAck"
+    },
+    "NoReply": {
+      "Type": "Pass",
+      "Parameters": { "case_id.$": "$.case_id", "reason": "No insurer reply after polling" },
+      "Next": "NeedsReview"
+    },
+    "MarkActive": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": { "FunctionName": "${mark_active_arn}", "Payload.$": "$" },
+      "OutputPath": "$.Payload",
+      "End": true
+    },
+    "NeedsReview": {
+      "Comment": "Phase 3 replaces this with a task-token wait for the reviewer in the operations console.",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": { "FunctionName": "${mark_for_review_arn}", "Payload.$": "$" },
+      "OutputPath": "$.Payload",
+      "End": true
+    }
+  }
+}

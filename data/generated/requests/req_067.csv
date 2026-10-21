@@ -1,0 +1,13 @@
+Emp #,Surname,Given Name,DOB,Gender,Member Type,Dependent Of,Date Hired,Plan Type
+ALN-20417,Salazar,Maria,14-Aug-2000,F,Principal,,26-Oct-2026,SILVER
+,Salazar,Juan,25-Jun-1987,M,spouse,ALN-20417,,
+,Salazar,Juan,24-Apr-2008,M,child,ALN-20417,,
+,Salazar,Kristine,21-Jan-2026,F,child,ALN-20417,,
+,Salazar,Maria,02-Sep-2023,F,child,ALN-20417,,
+ALN-20418,Torres,Gabriel,19-Aug-1995,M,Principal,,17-Oct-2026,BRONZE
+,Torres,Bea,18-Jul-2010,F,child,ALN-20418,,
+ALN-20419,Aquino,Rafael,11-Jan-1974,M,Principal,,24-Oct-2026,BRONZE
+,Aquino,Juan,12-Dec-2025,M,child,ALN-20419,,
+ALN-20420,Dela Cruz,Ana,12-Jan-2003,F,Principal,,06-Oct-2026,SILVER
+,Dela Cruz,Carlo,08-Jul-2012,M,child,ALN-20420,,
+,Aquino,Andres,28-Mar-2003,M,child,ALN-20419,,

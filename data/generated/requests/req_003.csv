@@ -1,0 +1,11 @@
+Staff ID,fname,lname,Date of Birth,gender,rel,principal employee id,employment date,plan code,Department,Remarks
+BYN-20014,PATRICIA,PASCUAL,1972-08-11,Female,Principal,,2026-10-18,SILVER,Operations,
+BYN-20015,JOSE,GONZALES,1994-12-02,Male,Principal,,2026-10-14,SILVER,Operations,
+,BEA,GONZALES,2002-12-24,Female,spouse,BYN-20015,,,Operations,
+,RAFAEL,GONZALES,2021-07-23,Male,child,BYN-20015,,,Operations,
+BYN-20016,GABRIEL,PASCUAL,1971-04-24,Male,Principal,,2026-09-29,SILVER,Operations,
+,JUAN,PASCUAL,2016-12-03,Male,child,BYN-20016,,,Operations,
+BYN-20017,MIGUEL,BAUTISTA,1998-12-03,Male,Principal,,2026-10-20,SILVER,Operations,
+,PATRICIA,BAUTISTA,1992-04-05,Female,spouse,BYN-20017,,,Operations,
+,ANDRES,BAUTISTA,2012-07-10,Male,child,BYN-20017,,,Operations,
+,PAOLO,BAUTISTA,2013-07-27,Male,child,BYN-20017,,,Operations,

@@ -1,0 +1,13 @@
+Alon Logistics Inc. - HMO Enrollment List
+
+Staff ID,fname,lname,Date of Birth,gender,rel,principal employee id,employment date,plan code
+ALN-20281,Ramon,Castillo,09/15/1976,Male,Employee,,09/28/2026,Bronze
+,Rhea,Castillo,03/06/1997,Female,Spouse,ALN-20281,,
+ALN-20282,Camille,Cruz,05/16/1993,Female,Employee,,10/11/2026,Bronze
+,Grace,Cruz,02/14/2006,Female,Child,ALN-20282,,
+ALN-20283,Ana,Reyes,03/16/1981,Female,Employee,,10/23/2026,Silver
+,Andres,Reyes,01/13/2026,Male,Child,ALN-20283,,
+,Kristine,Reyes,06/30/1967,Female,Parent,ALN-20283,,
+ALN-20284,Jose,Gonzales,02/03/1986,Male,Employee,,10/23/2026,Silver
+,Andrea,Gonzales,12/01/1988,Female,Spouse,ALN-20284,,
+ALN-20285,Bea,Flores,07/09/1975,?,Employee,,09/21/2026,Bronze

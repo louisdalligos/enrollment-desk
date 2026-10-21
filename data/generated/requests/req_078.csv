@@ -1,0 +1,9 @@
+Dalisay Software Labs - HMO Enrollment List
+
+Staff ID,fname,lname,Date of Birth,gender,rel,principal employee id,employment date,plan code
+DLS-20464,Gabriel,Garcia,"June 22, 1973",?,Employee,,"October 06, 2026",SILVER
+DLS-20465,Joshua,Torres,"June 22, 2000",M,Employee,,"September 29, 2026",SILVER
+,Camille,Torres,"June 06, 1971",F,Spouse,DLS-20465,,
+DLS-20466,Camille,Villanueva,"June 30, 1991",F,Employee,,"September 29, 2026",SILVER
+,Noel,Villanueva,"January 25, 1995",M,Spouse,DLS-20466,,
+DLS-10009,Joshua,Gonzales,"April 07, 1992",M,Employee,,"June 06, 2025",SILVER

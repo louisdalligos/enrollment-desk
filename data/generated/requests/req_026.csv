@@ -1,0 +1,17 @@
+Employee ID,First Name,Last Name,Birth Date,Sex,Relationship,Principal ID,Hire Date,Plan
+ALN-20139,Ana,Navarro,20-Mar-1990,F,Employee,,27-Sep-2026,SILVER
+,Joshua,Navarro,26-Jan-1995,M,Spouse,ALN-20139,,
+,Noel,Navarro,03-Feb-2024,M,Child,ALN-20139,,
+ALN-20140,Miguel,Cruz,16-Jan-1982,M,Employee,,13-Oct-2026,BRONZE
+,Maria Clara,Cruz,07-Jan-1974,F,Spouse,ALN-20140,,
+ALN-20141,Maria,Navarro,28-Aug-1997,F,Employee,,16-Oct-2026,BRONZE
+,Patricia,Navarro,20-Jan-2009,F,Child,ALN-20141,,
+ALN-20142,Liza,Salazar,29-May-1989,F,Employee,,03-Oct-2026,BRONZE
+,Gabriel,Salazar,11-Apr-1998,M,Spouse,ALN-20142,,
+,Jose,Salazar,18-Apr-2018,M,Child,ALN-20142,,
+ALN-20143,Joanna,Castillo,20-Apr-1992,F,Employee,,05-Oct-2026,GOLD
+ALN-20144,Maria,Flores,06-May-1993,F,Employee,,21-Sep-2026,SILVER
+,Gabriel,Flores,04-Jan-1988,M,Spouse,ALN-20144,,
+ALN-20145,Patricia,Gonzales,29-Mar-1992,F,Employee,,08-Oct-2026,SILVER
+,Paolo,Gonzales,26-Apr-2016,M,Child,ALN-20145,,
+ALN-20146,Liza,Flores,13-May-1999,F,Employee,,03-Oct-2026,SILVER

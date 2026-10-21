@@ -1,0 +1,7 @@
+Emp #,Surname,Given Name,DOB,Gender,Member Type,Dependent Of,Date Hired,Plan Type
+TLA-20476,Dela Cruz,Joshua,"May 02, 1996",Male,Employee,,"September 22, 2026",GOLD
+,Dela Cruz,Rafael,"February 05, 2013",Male,Child,TLA-20476,,
+TLA-20477,Castillo,Joshua,"May 23, 1987",,Employee,,"October 10, 2026",GOLD
+TLA-20478,Torres,Rhea,"April 26, 1987",Female,Employee,,"September 21, 2026",BRONZE
+,Torres,Joanna,"July 29, 2018",Female,Child,TLA-20478,,
+,Torres,Liza,"June 30, 2020",Female,Child,TLA-20478,,

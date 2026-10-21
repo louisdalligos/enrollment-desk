@@ -1,0 +1,17 @@
+Staff ID,fname,lname,Date of Birth,gender,rel,principal employee id,employment date,plan code
+TLA-20060,Bea,Aquino,17-Dec-1980,Female,Employee,,04-Oct-2026,GOLD
+,Maria,Aquino,25-Feb-2013,Female,Child,TLA-20060,,
+,Rafael,Aquino,10-Dec-2012,Male,Child,TLA-20060,,
+,Gabriel,Aquino,18-Mar-2005,Male,Child,TLA-20060,,
+TLA-20061,Grace,Garcia,23-Jan-1997,Female,Employee,,16-Oct-2026,BRONZE
+,Joanna,Garcia,11-May-2013,Female,Child,TLA-20061,,
+,Juan,Garcia,03-Aug-2008,Male,Child,TLA-20061,,
+TLA-20062,Patricia,Domingo,10-Aug-1991,Female,Employee,,23-Oct-2026,BRONZE
+,Liza,Domingo,09-Jun-2008,Female,Child,TLA-20062,,
+,Grace,Domingo,16-Dec-2017,Female,Child,TLA-20062,,
+TLA-20063,Juan,Domingo,08-Dec-1980,Male,Employee,,26-Oct-2026,BRONZE
+,Andrea,Domingo,18-Jul-1987,Female,Spouse,TLA-20063,,
+TLA-20064,Paolo,Bautista,09-Mar-1985,Male,Employee,,03-Oct-2026,BRONZE
+,Grace,Bautista,01-Jun-1997,Female,Spouse,TLA-20064,,
+,Gabriel,Bautista,19-Jun-2022,Male,Child,TLA-20064,,
+TLA-20065,Paolo,Castillo,09-Nov-2026,Male,Employee,,23-Sep-2026,BRONZE

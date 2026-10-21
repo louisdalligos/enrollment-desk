@@ -1,0 +1,312 @@
+{
+  "CMP-ALON": {
+    "ALN-10000": {
+      "plan_code": "BRONZE"
+    },
+    "ALN-10001": {
+      "plan_code": "SILVER"
+    },
+    "ALN-10002": {
+      "plan_code": "BRONZE"
+    },
+    "ALN-10003": {
+      "plan_code": "SILVER"
+    },
+    "ALN-10004": {
+      "plan_code": "BRONZE"
+    },
+    "ALN-10005": {
+      "plan_code": "BRONZE"
+    },
+    "ALN-10006": {
+      "plan_code": "SILVER"
+    },
+    "ALN-10007": {
+      "plan_code": "SILVER"
+    },
+    "ALN-10008": {
+      "plan_code": "SILVER"
+    },
+    "ALN-10009": {
+      "plan_code": "BRONZE"
+    },
+    "ALN-10010": {
+      "plan_code": "BRONZE"
+    },
+    "ALN-10011": {
+      "plan_code": "BRONZE"
+    },
+    "ALN-10012": {
+      "plan_code": "SILVER"
+    },
+    "ALN-10013": {
+      "plan_code": "SILVER"
+    },
+    "ALN-10014": {
+      "plan_code": "BRONZE"
+    },
+    "ALN-10015": {
+      "plan_code": "SILVER"
+    },
+    "ALN-10016": {
+      "plan_code": "SILVER"
+    },
+    "ALN-10017": {
+      "plan_code": "SILVER"
+    },
+    "ALN-10018": {
+      "plan_code": "SILVER"
+    },
+    "ALN-10019": {
+      "plan_code": "BRONZE"
+    }
+  },
+  "CMP-BAYAN": {
+    "BYN-10000": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10001": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10002": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10003": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10004": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10005": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10006": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10007": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10008": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10009": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10010": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10011": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10012": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10013": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10014": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10015": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10016": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10017": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10018": {
+      "plan_code": "SILVER"
+    },
+    "BYN-10019": {
+      "plan_code": "SILVER"
+    }
+  },
+  "CMP-DALISAY": {
+    "DLS-10000": {
+      "plan_code": "GOLD"
+    },
+    "DLS-10001": {
+      "plan_code": "SILVER"
+    },
+    "DLS-10002": {
+      "plan_code": "SILVER"
+    },
+    "DLS-10003": {
+      "plan_code": "GOLD"
+    },
+    "DLS-10004": {
+      "plan_code": "GOLD"
+    },
+    "DLS-10005": {
+      "plan_code": "SILVER"
+    },
+    "DLS-10006": {
+      "plan_code": "GOLD"
+    },
+    "DLS-10007": {
+      "plan_code": "SILVER"
+    },
+    "DLS-10008": {
+      "plan_code": "GOLD"
+    },
+    "DLS-10009": {
+      "plan_code": "SILVER"
+    },
+    "DLS-10010": {
+      "plan_code": "GOLD"
+    },
+    "DLS-10011": {
+      "plan_code": "SILVER"
+    },
+    "DLS-10012": {
+      "plan_code": "SILVER"
+    },
+    "DLS-10013": {
+      "plan_code": "SILVER"
+    },
+    "DLS-10014": {
+      "plan_code": "SILVER"
+    },
+    "DLS-10015": {
+      "plan_code": "GOLD"
+    },
+    "DLS-10016": {
+      "plan_code": "GOLD"
+    },
+    "DLS-10017": {
+      "plan_code": "SILVER"
+    },
+    "DLS-10018": {
+      "plan_code": "GOLD"
+    },
+    "DLS-10019": {
+      "plan_code": "SILVER"
+    }
+  },
+  "CMP-MAYON": {
+    "MYN-10000": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10001": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10002": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10003": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10004": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10005": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10006": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10007": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10008": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10009": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10010": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10011": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10012": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10013": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10014": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10015": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10016": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10017": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10018": {
+      "plan_code": "BRONZE"
+    },
+    "MYN-10019": {
+      "plan_code": "BRONZE"
+    }
+  },
+  "CMP-TALA": {
+    "TLA-10000": {
+      "plan_code": "BRONZE"
+    },
+    "TLA-10001": {
+      "plan_code": "GOLD"
+    },
+    "TLA-10002": {
+      "plan_code": "BRONZE"
+    },
+    "TLA-10003": {
+      "plan_code": "GOLD"
+    },
+    "TLA-10004": {
+      "plan_code": "GOLD"
+    },
+    "TLA-10005": {
+      "plan_code": "GOLD"
+    },
+    "TLA-10006": {
+      "plan_code": "GOLD"
+    },
+    "TLA-10007": {
+      "plan_code": "GOLD"
+    },
+    "TLA-10008": {
+      "plan_code": "GOLD"
+    },
+    "TLA-10009": {
+      "plan_code": "BRONZE"
+    },
+    "TLA-10010": {
+      "plan_code": "GOLD"
+    },
+    "TLA-10011": {
+      "plan_code": "BRONZE"
+    },
+    "TLA-10012": {
+      "plan_code": "GOLD"
+    },
+    "TLA-10013": {
+      "plan_code": "BRONZE"
+    },
+    "TLA-10014": {
+      "plan_code": "GOLD"
+    },
+    "TLA-10015": {
+      "plan_code": "BRONZE"
+    },
+    "TLA-10016": {
+      "plan_code": "GOLD"
+    },
+    "TLA-10017": {
+      "plan_code": "GOLD"
+    },
+    "TLA-10018": {
+      "plan_code": "GOLD"
+    },
+    "TLA-10019": {
+      "plan_code": "GOLD"
+    }
+  }
+}

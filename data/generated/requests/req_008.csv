@@ -1,0 +1,33 @@
+Staff ID,fname,lname,Date of Birth,gender,rel,principal employee id,employment date,plan code
+DLS-20048,Kristine,Cruz,02/01/2003,Female,Principal,,10/22/2026,Gold
+,Camille,Cruz,02/13/1968,Female,parent,DLS-20048,,
+DLS-20049,Ramon,Mendoza,07/25/2003,Male,Principal,,10/13/2026,Gold
+,Miguel,Mendoza,06/18/2025,Male,child,DLS-20049,,
+,Ramon,Mendoza,01/20/2012,Male,child,DLS-20049,,
+,Andrea,Mendoza,05/24/2022,Female,child,DLS-20049,,
+DLS-20050,Gabriel,Torres,03/29/1978,Male,Principal,,10/16/2026,Silver
+,Maria Clara,Torres,01/20/2005,Female,spouse,DLS-20050,,
+,Andrea,Torres,03/15/2011,Female,child,DLS-20050,,
+DLS-20051,Andrea,Garcia,07/10/1990,Female,Principal,,09/21/2026,Gold
+,Gabriel,Garcia,06/08/2009,Male,child,DLS-20051,,
+,Rhea,Garcia,07/17/2011,Female,child,DLS-20051,,
+,Grace,Garcia,05/23/2023,Female,child,DLS-20051,,
+DLS-20052,Liza,Salazar,01/04/1974,Female,Principal,,10/05/2026,Gold
+,Miguel,Salazar,04/02/2022,Male,child,DLS-20052,,
+DLS-20053,Paolo,Navarro,12/24/2000,Male,Principal,,10/12/2026,Silver
+,Liza,Navarro,05/28/1976,Female,parent,DLS-20053,,
+DLS-20054,Noel,Domingo,08/26/1990,Male,Principal,,10/09/2026,PLATINUM
+DLS-20055,Miguel,Domingo,12/07/2004,Male,Principal,,10/13/2026,Silver
+,Ramon,Domingo,08/25/2014,Male,child,DLS-20055,,
+,Maria,Domingo,01/16/2025,Female,child,DLS-20055,,
+DLS-20056,Liza,Dela Cruz,02/06/2005,Female,Principal,,10/04/2026,Gold
+,Juan,Dela Cruz,06/17/2010,Male,child,DLS-20056,,
+,Joanna,Dela Cruz,12/26/1968,Female,parent,DLS-20056,,
+DLS-20057,Noel,Villanueva,07/09/1988,Male,Principal,,10/19/2026,Gold
+,Joanna,Villanueva,06/27/1975,Female,spouse,DLS-20057,,
+DLS-20058,Patricia,Ramos,05/28/1987,Female,Principal,,10/07/2026,Gold
+,Kristine,Ramos,09/14/2008,Female,child,DLS-20058,,
+,Gabriel,Ramos,04/30/2017,Male,child,DLS-20058,,
+,Jose,Ramos,07/16/2025,Male,child,DLS-20058,,
+DLS-20059,Liza,Navarro,06/01/1998,Female,Principal,,10/10/2026,Gold
+,Kristine,Navarro,05/26/2013,Female,child,DLS-20059,,
