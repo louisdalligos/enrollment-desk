@@ -13,9 +13,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -e ".[dev]"
+      - run: pip install -e ".[aws,dev]"
       - name: Unit and workflow tests
         run: pytest -q
+      - name: Build Linux Lambda package
+        run: python scripts/build_lambda.py
       - name: Evaluation gate (parser + rules vs labeled requests)
         run: enrollment-desk evaluate data/generated
 

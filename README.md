@@ -92,7 +92,7 @@ aws stepfunctions start-execution --state-machine-arn $SFN \
 
 Everything is pay-per-use (Lambda, Step Functions, S3), so an idle deployment costs close to nothing. `terraform destroy` removes it all, bucket included.
 
-The simulator Function URL uses `AWS_IAM`. The HTTP client signs Lambda URL requests with SigV4 using the AWS credential chain (including temporary session tokens) and the region in the URL. Local HTTP simulator calls remain unsigned. For local calls to an AWS URL, install `pip install -e '.[aws]'` and configure AWS credentials. Lambda supplies boto3/botocore in its Python runtime. The workflow role receives both `lambda:InvokeFunctionUrl` (AWS_IAM only) and `lambda:InvokeFunction` (Function URL only), scoped to this simulator ARN. Both resources share an account, so no additional resource-based invocation policy is needed. A 403 should be investigated as a credentials or IAM configuration issue; do not make the URL public.
+The simulator Function URL uses `AWS_IAM`. The HTTP client signs Lambda URL requests with SigV4 using the AWS credential chain (including temporary session tokens) and the region in the URL. Local HTTP simulator calls remain unsigned. For local calls to an AWS URL, install `pip install -e '.[aws]'` and configure AWS credentials. The deployment builder bundles boto3/botocore with their dependencies. The workflow role receives both `lambda:InvokeFunctionUrl` (AWS_IAM only) and `lambda:InvokeFunction` (Function URL only), scoped to this simulator ARN. Both resources share an account, so no additional resource-based invocation policy is needed. A 403 should be investigated as a credentials or IAM configuration issue; do not make the URL public.
 
 ## Layout
 
@@ -125,3 +125,17 @@ data/samples/          a clean and a messy example roster
 
 - Plans, dependent age limits and companies are invented for development and testing and are not any insurer's actual terms.
 - The AI will never change a case's status. Only the workflow can, and coverage goes active only on an insurer acknowledgment.
+
+## Local web interface (Windows PowerShell)
+
+From the project folder, run:
+
+```powershell
+.\.venv\Scripts\python.exe -m enrollment_desk.web
+```
+
+Open http://127.0.0.1:8080 in your browser. Select a company, upload a CSV or XLSX roster (up to 5 MB), and inspect validation findings, member numbers, and the event timeline. Downloadable sample rosters are available on the page; choose Dalisay Software Labs for those samples. Search and status filters help navigate saved cases.
+
+This is a local simulation using the same workflow rules as the CLI, with a fixed demo date and instantly advanced waits. It uses the in-process insurer simulator, requires no AWS credentials, and stores cases, events, and uploads in `.local/store`. Stop with Ctrl+C. Use `--port 8082` or `--store .local/web-demo` for an alternate port or isolated records. The server binds only to 127.0.0.1 and is intended for local development with synthetic data.
+
+See [AWS deployment preparation](docs/aws-deployment.md) for the Windows packaging commands, workflow validation steps, and remaining web hosting work.
