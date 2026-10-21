@@ -91,19 +91,14 @@ resource "aws_lambda_function" "insurer_sim" {
   }
 }
 
-# Public URL: the simulator holds no data and only echoes synthetic outcomes.
+# IAM-protected URL: the workflow role receives scoped invocation permissions.
 resource "aws_lambda_function_url" "insurer_sim" {
   function_name      = aws_lambda_function.insurer_sim.function_name
-  authorization_type = "NONE"
+  authorization_type = "AWS_IAM"
 }
 
-resource "aws_lambda_permission" "insurer_sim_url" {
-  statement_id           = "AllowPublicFunctionUrl"
-  action                 = "lambda:InvokeFunctionUrl"
-  function_name          = aws_lambda_function.insurer_sim.function_name
-  principal              = "*"
-  function_url_auth_type = "NONE"
-}
+# The workflow and simulator share an account, so the scoped identity policy in
+# iam.tf is sufficient. Avoid a resource policy that grants direct invocation.
 
 # ---------- workflow task functions ----------
 

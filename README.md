@@ -92,7 +92,7 @@ aws stepfunctions start-execution --state-machine-arn $SFN \
 
 Everything is pay-per-use (Lambda, Step Functions, S3), so an idle deployment costs close to nothing. `terraform destroy` removes it all, bucket included.
 
-If calls to the simulator's function URL return 403, your account may also require a `lambda:InvokeFunction` permission for function URLs; add one next to `aws_lambda_permission.insurer_sim_url`.
+The simulator Function URL uses `AWS_IAM`. The HTTP client signs Lambda URL requests with SigV4 using the AWS credential chain (including temporary session tokens) and the region in the URL. Local HTTP simulator calls remain unsigned. For local calls to an AWS URL, install `pip install -e '.[aws]'` and configure AWS credentials. Lambda supplies boto3/botocore in its Python runtime. The workflow role receives both `lambda:InvokeFunctionUrl` (AWS_IAM only) and `lambda:InvokeFunction` (Function URL only), scoped to this simulator ARN. Both resources share an account, so no additional resource-based invocation policy is needed. A 403 should be investigated as a credentials or IAM configuration issue; do not make the URL public.
 
 ## Layout
 

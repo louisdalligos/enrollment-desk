@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import json
+import re
 import urllib.error
 import urllib.request
 from datetime import datetime
 from typing import Callable, Protocol
+from urllib.parse import urlsplit
 
 from .insurer_sim.core import InsurerSimulator, InsurerUnavailable
 
@@ -35,8 +37,33 @@ class HttpInsurer:
 
     def _call(self, method: str, path: str, body: dict | None = None) -> dict:
         data = json.dumps(body, default=str).encode() if body is not None else None
-        req = urllib.request.Request(self.base_url + path, data=data, method=method,
-                                     headers={"content-type": "application/json"})
+        url = self.base_url + path
+        headers = {"content-type": "application/json"}
+        # AWS Lambda Function URLs use IAM authentication. Keep local HTTP
+        # simulator calls unsigned for developer workflows and unit tests.
+        endpoint = urlsplit(url)
+        function_url = re.fullmatch(
+            r"[a-z0-9-]+\.lambda-url\.([a-z0-9-]+)\.on\.aws", endpoint.hostname or ""
+        )
+        if function_url:
+            if endpoint.scheme != "https":
+                raise ValueError("Lambda Function URLs require HTTPS")
+            from botocore.auth import SigV4Auth
+            from botocore.awsrequest import AWSRequest
+            from botocore.session import get_session
+
+            session = get_session()
+            credentials = session.get_credentials()
+            if credentials is None:
+                raise RuntimeError("AWS credentials required for IAM-protected simulator")
+            region = function_url.group(1)
+            from hashlib import sha256
+
+            headers["x-amz-content-sha256"] = sha256(data or b"").hexdigest()
+            signed = AWSRequest(method=method, url=url, data=data, headers=headers)
+            SigV4Auth(credentials.get_frozen_credentials(), "lambda", region).add_auth(signed)
+            headers = dict(signed.headers.items())
+        req = urllib.request.Request(url, data=data, method=method, headers=headers)
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                 return json.loads(resp.read())

@@ -18,7 +18,7 @@ data "aws_iam_policy_document" "sfn_assume" {
   }
 }
 
-# Workflow tasks: read uploads and reference data, write case snapshots and events. Nothing else.
+# Workflow tasks: case storage, IAM-authenticated simulator URL calls, and logs.
 resource "aws_iam_role" "workflow_lambda" {
   name               = "${local.name}-workflow-lambda"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
@@ -43,6 +43,26 @@ data "aws_iam_policy_document" "workflow_lambda" {
       test     = "StringLike"
       variable = "s3:prefix"
       values   = ["cases/*", "events/*"]
+    }
+  }
+  statement {
+    sid       = "InvokeInsurerSimulatorUrl"
+    actions   = ["lambda:InvokeFunctionUrl"]
+    resources = [aws_lambda_function.insurer_sim.arn]
+    condition {
+      test     = "StringEquals"
+      variable = "lambda:FunctionUrlAuthType"
+      values   = ["AWS_IAM"]
+    }
+  }
+  statement {
+    sid       = "InvokeInsurerSimulatorViaUrl"
+    actions   = ["lambda:InvokeFunction"]
+    resources = [aws_lambda_function.insurer_sim.arn]
+    condition {
+      test     = "Bool"
+      variable = "lambda:InvokedViaFunctionUrl"
+      values   = ["true"]
     }
   }
   statement {
