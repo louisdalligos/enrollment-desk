@@ -10,5 +10,14 @@ python -m pip install --quiet \
   --target build/lambda "pydantic>=2.6,<3" "openpyxl>=3.1,<4"
 cp -r src/enrollment_desk build/lambda/
 find build/lambda -name "__pycache__" -type d -prune -exec rm -rf {} +
-(cd build/lambda && zip -qr ../lambda.zip .)
+python -c '
+import os
+import zipfile
+
+with zipfile.ZipFile("build/lambda.zip", "w", zipfile.ZIP_DEFLATED) as z:
+    for root, dirs, files in os.walk("build/lambda"):
+        for filename in files:
+            path = os.path.join(root, filename)
+            z.write(path, os.path.relpath(path, "build/lambda"))
+'
 echo "built build/lambda.zip ($(du -h build/lambda.zip | cut -f1))"
