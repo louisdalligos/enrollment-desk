@@ -9,3 +9,7 @@ build/
 *.tfstate
 *.tfstate.*
 .DS_Store
+
+*.tfplan
+*.tfvars
+*.tfvars.json

@@ -12,8 +12,8 @@ authors = [{ name = "Louis Dalligos", email = "louisdalligos@outlook.com" }]
 dependencies = ["pydantic>=2.6,<3", "openpyxl>=3.1,<4"]
 
 [project.optional-dependencies]
-aws = ["boto3>=1.34"]
-dev = ["pytest>=8"]
+aws = ["boto3>=1.36"]
+dev = ["pytest>=8", "boto3>=1.36"]
 
 [project.scripts]
 enrollment-desk = "enrollment_desk.cli:main"
@@ -26,4 +26,4 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 
 [tool.setuptools.package-data]
-enrollment_desk = ["web.html"]
+enrollment_desk = ["web.html", "web.js", "auth.js"]

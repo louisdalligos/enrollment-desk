@@ -1,7 +1,11 @@
 variable "region" {
-  description = "AWS region. Singapore is the closest to the Philippines."
+  description = "Deployment region. This AWS account permits Sydney only."
   type        = string
-  default     = "ap-southeast-1"
+  default     = "ap-southeast-2"
+  validation {
+    condition     = var.region == "ap-southeast-2"
+    error_message = "This project must use Sydney (ap-southeast-2), the account's permitted region."
+  }
 }
 
 variable "project" {

@@ -1,0 +1,4 @@
+﻿# Copy to web.auto.tfvars to keep the web stack enabled on every subsequent plan.
+enable_web           = true
+force_destroy_bucket = false
+region               = "ap-southeast-2"

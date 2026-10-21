@@ -16,6 +16,11 @@ jobs:
       - run: pip install -e ".[aws,dev]"
       - name: Unit and workflow tests
         run: pytest -q
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Browser authentication tests
+        run: node --test tests/auth.test.mjs tests/web.test.mjs
       - name: Build Linux Lambda package
         run: python scripts/build_lambda.py
       - name: Evaluation gate (parser + rules vs labeled requests)
@@ -35,3 +40,5 @@ jobs:
         run: |
           mkdir -p ../../build && touch ../../build/lambda.zip
           terraform validate
+      - name: Mocked workflow-only and web-enabled plans
+        run: terraform test -no-color

@@ -8,6 +8,7 @@ no AI step can, and coverage becomes active only on an insurer acknowledgment.
 from __future__ import annotations
 
 import hashlib
+import re
 import time
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -47,7 +48,9 @@ def intake(state: dict, rt: Runtime) -> dict:
     received_at = rt.clock()
     doc = state["document_key"]
     parsed = parse_roster(Path(doc).name, rt.store.read_document(doc))
-    ref = reference_number(state["company_id"], doc, received_at)
+    ref = state.get("reference_number") or reference_number(state["company_id"], doc, received_at)
+    if not re.fullmatch(r"END-\d{8}-[A-F0-9]{6}(?:[A-F0-9]{26})?", ref):
+        raise ValueError("Invalid enrollment reference")
     case = Case(
         case_id=ref.lower(),
         reference_number=ref,

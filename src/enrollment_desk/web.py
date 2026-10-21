@@ -70,6 +70,10 @@ def make_handler(app):
         def do_GET(self):
             path = urlsplit(self.path).path
             try:
+                if path == '/config.json':
+                    return self.respond(200, {'mode': 'local'})
+                if path in ('/web.js', '/auth.js'):
+                    return self.respond(200, Path(__file__).with_name(path[1:]).read_bytes(), 'text/javascript; charset=utf-8')
                 if path == '/':
                     return self.respond(200, Path(__file__).with_name('web.html').read_bytes(), 'text/html; charset=utf-8')
                 if path == '/api/cases':

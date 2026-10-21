@@ -102,14 +102,29 @@ def read_rows(path: str | Path, content: bytes | None = None) -> list[list]:
         from openpyxl import load_workbook
 
         wb = load_workbook(io.BytesIO(data), data_only=True, read_only=True)
-        ws = wb.worksheets[0]
-        return [list(r) for r in ws.iter_rows(values_only=True)]
+        try:
+            ws = wb.worksheets[0]
+            if (ws.max_row and ws.max_row > 1015) or (ws.max_column and ws.max_column > 100):
+                raise ValueError("roster exceeds 1000 data rows or 100 columns")
+            rows = []
+            for row in ws.iter_rows(values_only=True):
+                if len(rows) >= 1015 or len(row) > 100:
+                    raise ValueError("roster exceeds 1000 data rows or 100 columns")
+                rows.append(list(row))
+            return rows
+        finally:
+            wb.close()
     text = data.decode("utf-8-sig")
     try:
         dialect = csv.Sniffer().sniff(text[:2048], delimiters=",;\t")
     except csv.Error:
         dialect = csv.excel
-    return [row for row in csv.reader(io.StringIO(text), dialect)]
+    rows = []
+    for row in csv.reader(io.StringIO(text), dialect):
+        if len(rows) >= 1015 or len(row) > 100:
+            raise ValueError("roster exceeds 1000 data rows or 100 columns")
+        rows.append(row)
+    return rows
 
 
 def _find_header(rows: list[list]) -> int:

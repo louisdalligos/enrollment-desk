@@ -29,6 +29,12 @@ Roster uploaded -> Rules validate -> All clear? --no--> Needs review
 
 No AI is in the loop yet; that's phase 2. The baseline it has to beat (or match on clean files) is below.
 
+## Web app
+
+The authenticated development app is available at [Enrollment Desk](https://d1fg5ziq51taek.cloudfront.net). Invited operators can upload rosters, inspect validation findings, and follow insurer acknowledgment and member numbers. The clean sample becomes active after acknowledgment; the messy sample routes to review.
+
+Hosting uses private S3 behind CloudFront, Cognito sign-in, a JWT-protected API, and the existing Step Functions workflow in Sydney (`ap-southeast-2`). See [AWS web deployment](docs/aws-deployment.md) for deployment and operator setup.
+
 ## Run it locally
 
 Needs Python 3.12+.
@@ -76,12 +82,12 @@ enrollment-desk --insurer-url http://localhost:8081 run data/samples/clean_roste
 
 With a real HTTP simulator the acknowledgment delay is real (90 seconds by default; set `SIM_ACK_DELAY_SECONDS=0` for quick runs).
 
-## Deploy to AWS
+## Deploy the workflow to AWS
 
 ```bash
 ./scripts/build_lambda.sh                          # build/lambda.zip
 cd infra/terraform
-terraform init && terraform apply                  # S3, Lambda, Step Functions, IAM in ap-southeast-1
+terraform init && terraform apply                  # S3, Lambda, Step Functions, IAM in ap-southeast-2
 
 BUCKET=$(terraform output -raw case_bucket)
 SFN=$(terraform output -raw state_machine_arn)
@@ -138,4 +144,4 @@ Open http://127.0.0.1:8080 in your browser. Select a company, upload a CSV or XL
 
 This is a local simulation using the same workflow rules as the CLI, with a fixed demo date and instantly advanced waits. It uses the in-process insurer simulator, requires no AWS credentials, and stores cases, events, and uploads in `.local/store`. Stop with Ctrl+C. Use `--port 8082` or `--store .local/web-demo` for an alternate port or isolated records. The server binds only to 127.0.0.1 and is intended for local development with synthetic data.
 
-See [AWS deployment preparation](docs/aws-deployment.md) for the Windows packaging commands, workflow validation steps, and remaining web hosting work.
+See [AWS web deployment](docs/aws-deployment.md) for the optional Cognito sign-in, authenticated API, private S3/CloudFront hosting, operator company assignments, Windows packaging commands, and rollout smoke tests. Enable hosting explicitly with `enable_web=true`; no AWS resources are created by local runs.
