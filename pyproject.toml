@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "enrollment-desk"
 version = "0.1.0"
-description = "HMO enrollment and endorsement desk: validated, traceable enrollments with AI assistance (portfolio project, synthetic data)"
+description = "HMO enrollment and endorsement desk: validated, traceable enrollments with AI assistance"
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [{ name = "Louis Dalligos", email = "louisdalligos@outlook.com" }]

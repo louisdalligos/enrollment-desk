@@ -23,7 +23,7 @@ variable "existing_members_file" {
 }
 
 variable "force_destroy_bucket" {
-  description = "Allow terraform destroy to delete the bucket with its contents. Demo convenience only."
+  description = "Allow terraform destroy to delete the bucket with its contents. Convenient for development environments; set false for anything long-lived."
   type        = bool
   default     = true
 }

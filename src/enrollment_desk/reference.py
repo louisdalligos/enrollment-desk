@@ -1,6 +1,6 @@
 """Synthetic reference data: plans and client companies.
 
-These plans and dependent rules are invented for the demo. They are shaped like
+These plans and dependent rules are invented for development and testing. They are shaped like
 typical Philippine corporate HMO plans but are not any insurer's actual terms.
 """
 

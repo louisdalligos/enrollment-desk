@@ -3,7 +3,7 @@
 It is stateless: the submission ID encodes everything needed to answer a status
 check, so it runs the same in-process, as a local HTTP server, or as a Lambda
 function URL. Outcomes are deterministic for a given payload and seed, which
-keeps tests and demo runs reproducible.
+keeps tests and local runs reproducible.
 
 Behaviour, all configurable:
 - the first submit attempts sometimes fail as "unavailable" (HTTP 503)

@@ -2,7 +2,7 @@
 
 Turns employee rosters and endorsement requests from HR into validated, insurer-ready records. Rules decide what is clear, a person reviews what isn't, and coverage is marked active only when the insurer acknowledges it. Every step is logged.
 
-This is a portfolio project modelled on the enrollment and endorsement workflow an HMO brokerage runs for its client companies in the Philippines. **All data is synthetic.** Companies, people and plans are invented, and no real personal or health information is used.
+It handles the enrollment and endorsement workflow an HMO brokerage runs for its client companies in the Philippines. **All data in this repository is synthetic.** Companies, people and plans are invented, and no real personal or health information is used.
 
 ## The problem it targets
 
@@ -110,7 +110,7 @@ src/enrollment_desk/
   evaluate.py          scoring against labels
 infra/terraform/       AWS resources and the state machine definition
 data/generated/        100 labeled requests + existing members
-data/samples/          a clean and a messy roster for demos
+data/samples/          a clean and a messy example roster
 ```
 
 ## Roadmap
@@ -119,9 +119,9 @@ data/samples/          a clean and a messy roster for demos
 2. AI extraction on Amazon Bedrock for PDFs, emails and unknown headers, with source quotes, Guardrails, Prompt Management and a CI evaluation gate
 3. Operations console (React, TanStack Query, shadcn/ui): case list, document beside extracted fields, approve or fix, task-token handoff back to the workflow; Aurora PostgreSQL for case state
 4. Review assistant (RAG over plan documents, LangGraph with read-only MCP tools) and full decision traces with replay
-5. Quality dashboard, model comparison, write-up and demo video
+5. Quality dashboard and model comparison
 
 ## Notes
 
-- Plans, dependent age limits and companies are invented for the demo and are not any insurer's actual terms.
+- Plans, dependent age limits and companies are invented for development and testing and are not any insurer's actual terms.
 - The AI will never change a case's status. Only the workflow can, and coverage goes active only on an insurer acknowledgment.
