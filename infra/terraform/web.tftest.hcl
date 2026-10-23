@@ -66,10 +66,15 @@ run "workflow_only_by_default" {
 run "authenticated_web_stack" {
   command = plan
   variables {
-    enable_web = true
+    enable_web             = true
+    enable_bedrock_mapping = false
   }
   assert {
-    condition     = length(aws_apigatewayv2_route.web) == 4 && alltrue([for route in aws_apigatewayv2_route.web : route.authorization_type == "JWT" && contains(route.authorization_scopes, "enrollment/access")])
+    condition     = aws_lambda_function.web_api[0].environment[0].variables.BEDROCK_MAPPING_MODEL == ""
+    error_message = "Manual-only deployment must not configure a Bedrock model."
+  }
+  assert {
+    condition     = length(aws_apigatewayv2_route.web) == 7 && alltrue([for route in aws_apigatewayv2_route.web : route.authorization_type == "JWT" && contains(route.authorization_scopes, "enrollment/access")])
     error_message = "Every API route must require JWT enrollment scope."
   }
   assert {
@@ -87,5 +92,17 @@ run "authenticated_web_stack" {
   assert {
     condition     = aws_lambda_function.web_api[0].handler == "enrollment_desk.cloud_api.lambda_handler" && aws_cloudfront_distribution.web[0].ordered_cache_behavior[0].path_pattern == "/api/*"
     error_message = "CloudFront API requests must reach the cloud Lambda handler."
+  }
+}
+
+run "bedrock_mapping_opt_in" {
+  command = plan
+  variables {
+    enable_web             = true
+    enable_bedrock_mapping = true
+  }
+  assert {
+    condition     = aws_lambda_function.web_api[0].environment[0].variables.BEDROCK_MAPPING_MODEL == "amazon.nova-lite-v1:0"
+    error_message = "Bedrock must use the direct model configured for Sydney."
   }
 }

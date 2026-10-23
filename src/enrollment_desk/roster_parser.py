@@ -135,17 +135,26 @@ def _find_header(rows: list[list]) -> int:
     raise ValueError("no header row found: fewer than three recognisable column names in the first 15 rows")
 
 
-def parse_roster(path: str | Path, content: bytes | None = None) -> ParseResult:
+def parse_roster(path: str | Path, content: bytes | None = None, *, header_row: int | None = None, column_map: dict | None = None) -> ParseResult:
     rows = read_rows(path, content)
-    h_idx = _find_header(rows)
-    headers = [_cell_text(c) for c in rows[h_idx]]
+    h_idx = _find_header(rows) if header_row is None else header_row
+    if header_row is not None:
+        from .column_mapping import headers_for, validate_mapping
+        headers = headers_for(rows, header_row)
+        if column_map is None:
+            raise ValueError("Explicit header rows require a reviewed column mapping")
+        validate_mapping(headers, column_map)
+    else:
+        if column_map is not None:
+            raise ValueError("A reviewed mapping requires an explicit header row")
+        headers = [_cell_text(c) for c in rows[h_idx]]
     header_map: dict[str, str] = {}
     unmapped: list[str] = []
     col_field: dict[int, str] = {}
     for i, h in enumerate(headers):
         if not h:
             continue
-        field = map_header(h)
+        field = column_map.get(str(i)) if column_map is not None else map_header(h)
         if field and field not in col_field.values():
             col_field[i] = field
             header_map[h] = field

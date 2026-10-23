@@ -99,3 +99,9 @@ This remains a synthetic-data development environment. Before real HR use, defin
 - [S3 POST policy limits](https://docs.aws.amazon.com/AmazonS3/latest/developerguide/sigv4-HTTPPOSTConstructPolicy.html)
 - [S3 conditional writes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-writes.html)
 - [Python Lambda packaging](https://docs.aws.amazon.com/lambda/latest/dg/python-package.html)
+
+## Manual column mapping
+
+The live app supports manual column review with Bedrock disabled. Select Dalisay Software Labs, download the unfamiliar-header sample, check **Review column mapping before processing**, and assign each source label to a field. Explicit approval records the reviewer, source hash and assignments before the normal workflow begins. Clean synthetic rosters become active after simulator acknowledgment; blocking findings route to needs review.
+
+Keep `enable_bedrock_mapping=false` while on-demand model quotas are zero. In this configuration the API has no model ID or Bedrock invocation grant, and the suggestion button is hidden. Local development uses Python 3.14.5; Lambda packaging continues targeting Linux/Python 3.12.

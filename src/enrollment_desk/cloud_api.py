@@ -2,12 +2,11 @@
 from __future__ import annotations
 
 import base64
-import io
+import hashlib
 import json
 import logging
 import os
 import re
-import zipfile
 from dataclasses import asdict
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -15,8 +14,9 @@ from uuid import uuid4
 
 from botocore.exceptions import ClientError
 
+from .column_mapping import preview, approval_record, MappingUnavailable
 from .reference import COMPANIES
-from .roster_parser import parse_roster
+from .roster_validation import ApiError, validate_container, validate_roster
 from .store import S3Store
 from .workflow.steps import readiness
 
@@ -27,38 +27,14 @@ SUB = re.compile(r'[a-f0-9-]{36}')
 MISSING = {'NoSuchKey', '404', 'NotFound'}
 
 
-class ApiError(Exception):
-    def __init__(self, status, message):
-        self.status, self.message = status, message
-
-
-def validate_roster(filename, data):
-    """Reject oversized/invalid containers before the workflow can consume them."""
-    if not 0 < len(data) <= MAX_UPLOAD:
-        raise ApiError(400, 'Choose a nonempty roster up to 5 MB.')
-    if filename.endswith('.xlsx'):
-        try:
-            with zipfile.ZipFile(io.BytesIO(data)) as archive:
-                entries = archive.infolist()
-                if len(entries) > 2000 or sum(i.file_size for i in entries) > 20 * 1024 * 1024:
-                    raise ApiError(400, 'Excel file expands beyond the supported limit.')
-        except zipfile.BadZipFile:
-            raise ApiError(400, 'Invalid Excel file.') from None
-    try:
-        roster = parse_roster(filename, data)
-    except Exception:
-        raise ApiError(400, 'Cannot read this roster. Upload a valid CSV or XLSX file.') from None
-    if not 0 < len(roster.members) <= MAX_MEMBERS:
-        raise ApiError(400, f'Upload between 1 and {MAX_MEMBERS} members per roster.')
-    if len(roster.model_dump_json().encode()) > 128 * 1024:
-        raise ApiError(400, 'Parsed roster is too large for the workflow. Split it into smaller files.')
 
 
 class CloudApi:
-    def __init__(self, s3, sfn, bucket, state_machine, store=None):
+    def __init__(self, s3, sfn, bucket, state_machine, store=None, mapper=None):
         self.s3, self.sfn = s3, sfn
         self.bucket, self.state_machine = bucket, state_machine
         self.store = store or S3Store(bucket)
+        self.mapper = mapper
 
     def exists(self, key):
         result = self.s3.list_objects_v2(Bucket=self.bucket, Prefix=key, MaxKeys=1)
@@ -113,7 +89,7 @@ class CloudApi:
         document = f'incoming/web/{sub}/{job_id}/{filename}'
         job = dict(job_id=job_id, company_id=company, filename=filename, size=size,
                    created_at=now.isoformat(), reference_number=reference, case_id=reference.lower(),
-                   staging_key=staging, document_key=document)
+                   staging_key=staging, document_key=document, review_mapping=body.get('review_mapping') is True)
         self.write(f'web/jobs/{sub}/{job_id}.json', job)
         post = self.s3.generate_presigned_post(
             Bucket=self.bucket, Key=staging, Fields={'Content-Type': 'application/octet-stream'},
@@ -121,7 +97,7 @@ class CloudApi:
             ExpiresIn=300)
         return {'job_id': job_id, 'upload': post}
 
-    def start(self, job):
+    def freeze(self, job, review=False):
         # Final input is immutable: retries never replace a roster already queued.
         if not self.exists(job['document_key']):
             if not self.exists(job['staging_key']):
@@ -146,15 +122,89 @@ class CloudApi:
                 stream.close()
             if len(data) != job['size']:
                 raise ApiError(400, 'Uploaded file size does not match.')
-            validate_roster(job['filename'], data)
+            validate_container(job['filename'], data)
+            if review:
+                preview(job['filename'], data)
+            else:
+                validate_roster(job['filename'], data)
             try:
                 self.s3.put_object(Bucket=self.bucket, Key=job['document_key'], Body=data,
                                    ContentType='application/octet-stream', IfNoneMatch='*')
             except ClientError as race:
                 if race.response['Error']['Code'] not in ('PreconditionFailed', '412'):
                     raise
+        stream = self.s3.get_object(Bucket=self.bucket, Key=job['document_key'])['Body']
+        try:
+            return stream.read(MAX_UPLOAD + 1)
+        finally:
+            stream.close()
+
+    def mapping_preview(self, job, row=None):
+        if not job.get('review_mapping'):
+            raise ApiError(409, 'Create a new upload with column review enabled.')
+        data = self.freeze(job, review=True)
+        return dict(preview(job['filename'], data, row), bedrock_enabled=self.mapper is not None)
+
+    def mapping_suggest(self, job, row):
+        if type(row) is not int:
+            raise ApiError(400, 'Select and review the header row first.')
+        selected = self.mapping_preview(job, row)
+        if self.mapper is None:
+            raise ApiError(503, 'Bedrock mapping is disabled. Map the columns manually.')
+        key = job['document_key'] + f'.suggestion-{row}.json'
+        if self.exists(key):
+            return self.read(key)
+        try:
+            suggestion = self.mapper.suggest(selected['headers'])
+            try:
+                self.s3.put_object(Bucket=self.bucket, Key=key, Body=json.dumps(suggestion).encode(),
+                                   ContentType='application/json', IfNoneMatch='*')
+            except ClientError as exc:
+                if exc.response['Error']['Code'] not in ('PreconditionFailed', '412'):
+                    raise
+                return self.read(key)
+            return suggestion
+        except MappingUnavailable as exc:
+            raise ApiError(503, str(exc)) from None
+
+    def mapping_approve(self, job, sub, body):
+        if body.get('confirm') is not True:
+            raise ApiError(400, 'Explicitly confirm the reviewed mapping before processing.')
+        if not job.get('review_mapping'):
+            raise ApiError(409, 'Create a new upload with column review enabled.')
+        data = self.freeze(job, review=True)
+        selected = preview(job['filename'], data, body.get('header_row'))
+        suggestion_key = job['document_key'] + f".suggestion-{selected['header_row']}.json"
+        suggestion = self.read(suggestion_key) if self.exists(suggestion_key) else None
+        record = approval_record(selected['headers'], selected['header_row'], body.get('mapping'),
+                                 hashlib.sha256(data).hexdigest(), sub, suggestion)
+        validate_roster(job['filename'], data, header_row=record['header_row'], column_map=record['column_map'])
+        key = job['document_key'] + '.mapping.json'
+        try:
+            self.s3.put_object(Bucket=self.bucket, Key=key, Body=json.dumps(record).encode(),
+                               ContentType='application/json', IfNoneMatch='*')
+        except ClientError as exc:
+            if exc.response['Error']['Code'] not in ('PreconditionFailed', '412'):
+                raise
+            previous = self.read(key)
+            if any(previous.get(k) != record[k] for k in ('source_sha256', 'header_row', 'column_map', 'approved_by')):
+                raise ApiError(409, 'This roster already has a different approved mapping. Upload a new case.') from None
+        return self.start(job)
+
+    def start(self, job):
+        if job.get('review_mapping') and not self.exists(job['document_key'] + '.mapping.json'):
+            raise ApiError(409, 'Review and approve the column mapping before starting.')
+        data = self.freeze(job)
+        mapping_key = job['document_key'] + '.mapping.json'
+        approval = self.read(mapping_key) if self.exists(mapping_key) else None
+        if approval and approval.get('source_sha256') != hashlib.sha256(data).hexdigest():
+            raise ApiError(409, 'The approved mapping does not match this roster.')
+        validate_roster(job['filename'], data, **(
+            {'header_row': approval['header_row'], 'column_map': approval['column_map']} if approval else {}))
         payload = {'document_key': job['document_key'], 'company_id': job['company_id'],
                    'reference_number': job['reference_number']}
+        if approval:
+            payload['mapping_key'] = mapping_key
         try:
             self.sfn.start_execution(stateMachineArn=self.state_machine, name=job['job_id'],
                                      input=json.dumps(payload, sort_keys=True))
@@ -223,6 +273,13 @@ class CloudApi:
                 raise ApiError(400, 'Expected a JSON object.')
         if method == 'POST' and path == '/api/uploads':
             return 201, self.create_upload(sub, allowed, body)
+        if method == 'POST' and path in ('/api/mapping-preview', '/api/mapping-suggestions', '/api/mapping-approve'):
+            job = self.job(sub, str(body.get('job_id', '')), allowed)
+            if path.endswith('preview'):
+                return 200, self.mapping_preview(job, body.get('header_row'))
+            if path.endswith('suggestions'):
+                return 200, self.mapping_suggest(job, body.get('header_row'))
+            return 202, self.mapping_approve(job, sub, body)
         if method == 'POST' and path == '/api/cases':
             job = self.job(sub, str(body.get('job_id', '')), allowed)
             return 202, self.start(job)
@@ -249,7 +306,10 @@ def runtime():
     region = os.environ['AWS_REGION']
     s3 = boto3.client('s3', endpoint_url=f'https://s3.{region}.amazonaws.com',
                       config=Config(signature_version='s3v4', s3={'addressing_style': 'virtual'}))
-    return CloudApi(s3, boto3.client('stepfunctions'), os.environ['CASE_BUCKET'], os.environ['STATE_MACHINE_ARN'])
+    from .column_mapping import BedrockColumnMapper
+    model = os.environ.get('BEDROCK_MAPPING_MODEL')
+    return CloudApi(s3, boto3.client('stepfunctions'), os.environ['CASE_BUCKET'], os.environ['STATE_MACHINE_ARN'],
+                    mapper=BedrockColumnMapper(model_id=model, region=region) if model else None)
 
 
 def lambda_handler(event, context):

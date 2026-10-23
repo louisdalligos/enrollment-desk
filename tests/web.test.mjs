@@ -9,7 +9,7 @@ async function boot(mode, signedIn = false) {
   // Load the real HTML's element IDs so missing bootstrap targets fail the test.
   const nodes = new Map([...html.matchAll(/\bid="([^"]+)"/g)].map(match => [match[1], {
     textContent: '', innerHTML: '', hidden: false, disabled: false, value: '',
-    addEventListener() {}, scrollIntoView() {}
+    handlers: {}, addEventListener(type, callback) { this.handlers[type] = callback; }, scrollIntoView() {}
   }]));
   const saved = new Map();
   if (signedIn) saved.set('enrollment.session', JSON.stringify({accessToken: 'test-access', expiresAt: Date.now() + 60000}));
@@ -54,4 +54,51 @@ test('local boot still loads demo cases without a token', async () => {
   assert.equal(nodes.get('total').textContent, 1);
   assert.equal(nodes.get('demoDate').textContent, '2026-10-15');
   assert.equal(nodes.get('submit').disabled, false);
+});
+
+
+test('local column review requires explicit approve before workflow request', async () => {
+  const nodes = await boot('local');
+  nodes.get('reviewMapping').checked = true;
+  const file = new Blob(['Payroll reference\nSYN-1']); file.name = 'test.csv';
+  nodes.get('file').files = [file];
+  const calls = [];
+  globalThis.fetch = async (url, options) => {
+    calls.push(url);
+    assert.match(url, /^\/api\/mapping-preview/);
+    return {ok: true, json: async () => ({job_id: 'abc', header_row: 0,
+      headers: ['Payroll reference'], mapping: {'0': null}, fields: ['employee_id'],
+      rows: [{index: 0, labels: ['Payroll reference']}]})};
+  };
+  await nodes.get('upload').handlers.submit({preventDefault() {}});
+  assert.equal(nodes.get('mappingPanel').hidden, false);
+  assert.equal(calls.length, 1);
+  nodes.get('mappingColumns').querySelectorAll = () => [{dataset: {column: '0'}, value: 'employee_id'}];
+  globalThis.fetch = async (url, options) => {
+    calls.push(url);
+    assert.equal(url, '/api/mapping-approve');
+    const body = JSON.parse(options.body);
+    assert.equal(body.confirm, true);
+    assert.deepEqual(body.mapping, {'0': 'employee_id'});
+    return {ok: false, status: 400, json: async () => ({error: 'Keep reviewing'})};
+  };
+  nodes.get('approveMapping').handlers.click();
+  for (let i = 0; i < 5; i++) await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls.length, 2);
+  assert.equal(nodes.get('mappingPanel').hidden, false);
+  assert.match(nodes.get('mappingMessage').textContent, /Keep reviewing/);
+});
+
+test('manual-only review hides Bedrock suggestions and explains approval', async () => {
+  const nodes = await boot('local');
+  nodes.get('reviewMapping').checked = true;
+  const file = new Blob(['Payroll reference\nSYN-1']); file.name = 'unknown.csv';
+  nodes.get('file').files = [file];
+  globalThis.fetch = async () => ({ok: true, json: async () => ({job_id: 'abc', header_row: 0,
+    headers: ['Payroll reference'], mapping: {'0': null}, fields: ['employee_id'],
+    rows: [{index: 0, labels: ['Payroll reference']}], bedrock_enabled: false})});
+  await nodes.get('upload').handlers.submit({preventDefault() {}});
+  assert.equal(nodes.get('suggestMapping').hidden, true);
+  assert.match(nodes.get('mappingHelp').textContent, /Bedrock is disabled/);
+  assert.equal(nodes.get('mappingPanel').hidden, false);
 });

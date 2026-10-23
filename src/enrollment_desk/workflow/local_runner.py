@@ -26,10 +26,10 @@ class FakeClock:
         self.now += timedelta(seconds=seconds)
 
 
-def run(document_key: str, company_id: str, rt: Runtime, clock: FakeClock | None = None) -> dict:
+def run(document_key: str, company_id: str, rt: Runtime, clock: FakeClock | None = None, *, mapping_key: str | None = None) -> dict:
     """Execute one case end to end. Returns the final state and the path of states visited."""
     path = ["Intake"]
-    state = steps.intake({"document_key": document_key, "company_id": company_id}, rt)
+    state = steps.intake({"document_key": document_key, "company_id": company_id, **({"mapping_key": mapping_key} if mapping_key else {})}, rt)
     path.append("Validate")
     state = steps.validate_case(state, rt)
     if not state["all_clear"]:

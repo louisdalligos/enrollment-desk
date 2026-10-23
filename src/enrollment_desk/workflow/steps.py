@@ -8,6 +8,7 @@ no AI step can, and coverage becomes active only on an insurer acknowledgment.
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 import time
 from dataclasses import dataclass
@@ -47,7 +48,16 @@ def intake(state: dict, rt: Runtime) -> dict:
     """Parse the uploaded roster and open a case. The reference number is issued here, on day one."""
     received_at = rt.clock()
     doc = state["document_key"]
-    parsed = parse_roster(Path(doc).name, rt.store.read_document(doc))
+    content = rt.store.read_document(doc)
+    review = None
+    if state.get("mapping_key"):
+        if state["mapping_key"] != doc + ".mapping.json":
+            raise ValueError("Invalid mapping approval location")
+        review = json.loads(rt.store.read_document(state["mapping_key"]))
+        if review["source_sha256"] != hashlib.sha256(content).hexdigest() or not review.get("approved_by"):
+            raise ValueError("Column mapping approval does not match this roster")
+    parsed = parse_roster(Path(doc).name, content, **(
+        {"header_row": review["header_row"], "column_map": review["column_map"]} if review else {}))
     ref = state.get("reference_number") or reference_number(state["company_id"], doc, received_at)
     if not re.fullmatch(r"END-\d{8}-[A-F0-9]{6}(?:[A-F0-9]{26})?", ref):
         raise ValueError("Invalid enrollment reference")
@@ -64,6 +74,10 @@ def intake(state: dict, rt: Runtime) -> dict:
     rt.store.put_case(case)
     _event(rt, case, "case.received", reference_number=ref, document=doc, members=len(parsed.members),
            header_map=parsed.header_map, unmapped_headers=parsed.unmapped_headers)
+    if review:
+        _event(rt, case, "columns.approved", header_row=review["header_row"], column_map=review["column_map"],
+               approved_by=review["approved_by"], approved_at=review["approved_at"], model_id=review.get("model_id"),
+               prompt_version=review.get("prompt_version"), suggested_mapping=review.get("suggested_mapping"))
     return {"case_id": case.case_id}
 
 

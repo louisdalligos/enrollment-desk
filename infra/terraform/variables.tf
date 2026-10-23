@@ -31,3 +31,19 @@ variable "force_destroy_bucket" {
   type        = bool
   default     = true
 }
+
+variable "enable_bedrock_mapping" {
+  description = "Opt in to header-only suggestions; human approval is always required."
+  type        = bool
+  default     = false
+}
+
+variable "bedrock_mapping_model" {
+  description = "Direct in-region Nova model; cross-region inference is not used."
+  type        = string
+  default     = "amazon.nova-lite-v1:0"
+  validation {
+    condition     = contains(["amazon.nova-lite-v1:0", "amazon.nova-micro-v1:0"], var.bedrock_mapping_model)
+    error_message = "Choose a supported direct Sydney Nova model."
+  }
+}

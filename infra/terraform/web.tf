@@ -242,7 +242,7 @@ resource "aws_apigatewayv2_integration" "web" {
 }
 
 resource "aws_apigatewayv2_route" "web" {
-  for_each             = var.enable_web ? toset(["GET /api/cases", "GET /api/cases/{job_id}", "POST /api/uploads", "POST /api/cases"]) : toset([])
+  for_each             = var.enable_web ? toset(["GET /api/cases", "GET /api/cases/{job_id}", "POST /api/uploads", "POST /api/cases", "POST /api/mapping-preview", "POST /api/mapping-suggestions", "POST /api/mapping-approve"]) : toset([])
   api_id               = aws_apigatewayv2_api.web[0].id
   route_key            = each.key
   target               = "integrations/${aws_apigatewayv2_integration.web[0].id}"
@@ -307,6 +307,14 @@ data "aws_iam_policy_document" "web_api" {
       values   = ["web/jobs/*", "events/*", "cases/*", "web-access/*", "incoming/web/*", "uploads/web/*"]
     }
   }
+  dynamic "statement" {
+    for_each = var.enable_bedrock_mapping ? [1] : []
+    content {
+      sid       = "SuggestHeaderMappings"
+      actions   = ["bedrock:InvokeModel"]
+      resources = ["arn:aws:bedrock:${var.region}::foundation-model/${var.bedrock_mapping_model}"]
+    }
+  }
   statement {
     actions   = ["states:StartExecution"]
     resources = [aws_sfn_state_machine.enrollment.arn]
@@ -345,8 +353,9 @@ resource "aws_lambda_function" "web_api" {
   memory_size      = 1024
   environment {
     variables = {
-      CASE_BUCKET       = aws_s3_bucket.cases.id
-      STATE_MACHINE_ARN = aws_sfn_state_machine.enrollment.arn
+      BEDROCK_MAPPING_MODEL = var.enable_bedrock_mapping ? var.bedrock_mapping_model : ""
+      CASE_BUCKET           = aws_s3_bucket.cases.id
+      STATE_MACHINE_ARN     = aws_sfn_state_machine.enrollment.arn
     }
   }
   depends_on = [aws_iam_role_policy.web_api, aws_s3_bucket_versioning.cases]
@@ -395,11 +404,12 @@ resource "aws_s3_bucket_lifecycle_configuration" "web_uploads" {
 
 resource "aws_s3_object" "web_assets" {
   for_each = var.enable_web ? {
-    "index.html"               = { path = "web.html", type = "text/html; charset=utf-8" }
-    "web.js"                   = { path = "web.js", type = "text/javascript; charset=utf-8" }
-    "auth.js"                  = { path = "auth.js", type = "text/javascript; charset=utf-8" }
-    "samples/clean_roster.csv" = { path = "../../data/samples/clean_roster.csv", type = "text/csv" }
-    "samples/messy_roster.csv" = { path = "../../data/samples/messy_roster.csv", type = "text/csv" }
+    "index.html"                     = { path = "web.html", type = "text/html; charset=utf-8" }
+    "web.js"                         = { path = "web.js", type = "text/javascript; charset=utf-8" }
+    "auth.js"                        = { path = "auth.js", type = "text/javascript; charset=utf-8" }
+    "samples/unfamiliar_headers.csv" = { path = "../../data/samples/unfamiliar_headers.csv", type = "text/csv" }
+    "samples/clean_roster.csv"       = { path = "../../data/samples/clean_roster.csv", type = "text/csv" }
+    "samples/messy_roster.csv"       = { path = "../../data/samples/messy_roster.csv", type = "text/csv" }
   } : {}
   bucket        = aws_s3_bucket.web[0].id
   key           = each.key

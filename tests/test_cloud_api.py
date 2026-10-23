@@ -113,8 +113,8 @@ def event(method='GET', path='/api/cases', body=None, user=USER):
         'rawPath': path, 'body': json.dumps(body) if body is not None else None}
 
 
-def upload(api, user=USER, filename='clean_roster.csv', data=CLEAN):
-    _, grant = api.dispatch(event('POST', '/api/uploads', {'company_id': 'CMP-DALISAY', 'filename': filename, 'size': len(data)}, user))
+def upload(api, user=USER, filename='clean_roster.csv', data=CLEAN, review=False):
+    _, grant = api.dispatch(event('POST', '/api/uploads', {'company_id': 'CMP-DALISAY', 'filename': filename, 'size': len(data), 'review_mapping': review}, user))
     job = api.job(user, grant['job_id'], {'CMP-DALISAY'})
     api.s3.put_object(Bucket='bucket', Key=job['staging_key'], Body=data)
     return job
@@ -324,3 +324,62 @@ def test_real_sdk_presigned_post_matches_regional_origin_and_size_policy():
     policy = json.loads(base64.b64decode(post['fields']['policy']))
     assert ['content-length-range', 100, 100] in policy['conditions']
     assert post['fields']['x-amz-security-token'] == 'fake-session'
+
+
+def test_reviewed_mapping_requires_confirmation_and_is_immutable(api):
+    data = b'Payroll reference,Given appellation,Family appellation\nSYN-1,Ana,Santos\n'
+    job = upload(api, data=data, review=True)
+    body = {'job_id': job['job_id'], 'header_row': 0,
+            'mapping': {'0': 'employee_id', '1': 'first_name', '2': 'last_name'}}
+    status, selected = api.dispatch(event('POST', '/api/mapping-preview', body))
+    assert status == 200 and selected['headers'][0] == 'Payroll reference'
+    assert not api.sfn.starts
+    with pytest.raises(ApiError):
+        api.dispatch(event('POST', '/api/mapping-approve', body))
+    body['confirm'] = True
+    status, result = api.dispatch(event('POST', '/api/mapping-approve', body))
+    assert status == 202
+    payload = json.loads(api.sfn.starts[-1][1])
+    assert payload['mapping_key'] == job['document_key'] + '.mapping.json'
+    approval = api.read(payload['mapping_key'])
+    assert approval['approved_by'] == USER
+    body['mapping']['0'] = None
+    with pytest.raises(ApiError) as exc:
+        api.dispatch(event('POST', '/api/mapping-approve', body))
+    assert exc.value.status == 409
+
+
+def test_mapping_routes_enforce_owner_and_manual_fallback(api):
+    job = upload(api, review=True)
+    with pytest.raises(ApiError) as exc:
+        api.dispatch(event('POST', '/api/mapping-preview', {'job_id': job['job_id']}, OTHER))
+    assert exc.value.status == 404
+    with pytest.raises(ApiError) as exc:
+        api.dispatch(event('POST', '/api/mapping-suggestions', {'job_id': job['job_id'], 'header_row': 0}))
+    assert exc.value.status == 503
+    assert not api.sfn.starts
+
+
+def test_review_upload_cannot_bypass_approval(api):
+    job = upload(api, review=True)
+    with pytest.raises(ApiError) as exc:
+        api.start(job)
+    assert exc.value.status == 409
+    assert not api.sfn.starts
+
+
+def test_model_suggestion_is_cached_and_never_starts_workflow(api):
+    job = upload(api, data=b'Payroll reference,Given appellation,Family appellation\nSYN-1,Ana,Santos\n', review=True)
+    api.mapper = Mock()
+    api.mapper.suggest.return_value = {'mapping': {'0': 'employee_id', '1': 'first_name', '2': 'last_name'},
+                                     'model_id': 'amazon.nova-lite-v1:0', 'prompt_version': 'test'}
+    body = {'job_id': job['job_id'], 'header_row': 0}
+    assert api.dispatch(event('POST', '/api/mapping-suggestions', body))[0] == 200
+    assert api.dispatch(event('POST', '/api/mapping-suggestions', body))[0] == 200
+    api.mapper.suggest.assert_called_once()
+    assert not api.sfn.starts
+    body.update(mapping=api.mapper.suggest.return_value['mapping'], confirm=True)
+    api.dispatch(event('POST', '/api/mapping-approve', body))
+    approval = api.read(job['document_key'] + '.mapping.json')
+    assert approval['model_id'] == 'amazon.nova-lite-v1:0'
+    assert approval['suggested_mapping'] == body['mapping']

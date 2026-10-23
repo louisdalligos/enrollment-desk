@@ -56,18 +56,19 @@ function detail(d, scroll = true) {
   if (scroll) $('details').scrollIntoView({behavior: 'smooth', block: 'start'});
 }
 const jsonPost = body => ({method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
-async function uploadCloud(file) {
+async function uploadCloud(file, review = false) {
   const company = $('company').value;
-  if (!pendingUpload || pendingUpload.file !== file || pendingUpload.company !== company) {
-    const grant = await request('/api/uploads', jsonPost({company_id: company, filename: file.name, size: file.size}));
+  if (!pendingUpload || pendingUpload.file !== file || pendingUpload.company !== company || pendingUpload.review !== review) {
+    const grant = await request('/api/uploads', jsonPost({company_id: company, filename: file.name, size: file.size, review_mapping: review}));
     const form = new FormData();
     for (const [key, value] of Object.entries(grant.upload.fields)) form.append(key, value);
     form.append('file', file); // S3 requires the file field last.
     message('Uploading roster to private storage?');
     const response = await fetch(grant.upload.url, {method: 'POST', body: form});
     if (!response.ok) throw Error('Upload failed. Select your file and try again.');
-    pendingUpload = {file, company, jobId: grant.job_id};
+    pendingUpload = {file, company, jobId: grant.job_id, review};
   }
+  if (review) return request('/api/mapping-preview', jsonPost({job_id: pendingUpload.jobId}));
   message('Validating the uploaded file and starting the workflow?');
   // A network retry with the same selected file reuses the existing workflow id.
   const result = await request('/api/cases', jsonPost({job_id: pendingUpload.jobId}));
@@ -81,8 +82,10 @@ $('upload').addEventListener('submit', async event => {
   loading = true; $('submit').disabled = true;
   message(isCloud() ? 'Preparing a secure upload…' : 'Validating roster and running the local workflow…');
   try {
-    const d = isCloud() ? await uploadCloud(file) : await request('/api/cases?' + new URLSearchParams({company: $('company').value, filename: file.name}),
+    const review = $('reviewMapping').checked;
+    const d = isCloud() ? await uploadCloud(file, review) : await request((review ? '/api/mapping-preview?' : '/api/cases?') + new URLSearchParams({company: $('company').value, filename: file.name}),
       {method: 'POST', headers: {'X-Enrollment-Desk': 'local', 'Content-Type': 'application/octet-stream'}, body: file});
+    if (review) { showMapping(d, isCloud() ? pendingUpload.jobId : d.job_id); return; }
     await load();
     if (d.job && !cases.some(c => c.job_id === d.job.job_id)) { cases.unshift(d.job); render(); }
     detail(d);
@@ -132,3 +135,55 @@ setInterval(async () => {
     render(); updateAuth();
   } catch (error) { message(error.message, true); }
 }, 10000);
+
+let mappingReview = null;
+function showMapping(data, jobId) {
+  mappingReview = {data, jobId};
+  $('mappingPanel').hidden = false;
+  $('suggestMapping').hidden = !data.bedrock_enabled;
+  $('mappingHelp').textContent = data.bedrock_enabled ? 'Select the header row and assign each column. Bedrock can suggest assignments from labels only; you must review and approve them.' : 'Manual review mode. Select the header row and assign each column. Bedrock is disabled. Your approval starts the normal validation workflow.';
+  $('headerRow').innerHTML = data.rows.map(row => `<option value="${row.index}">Row ${row.index + 1}: ${esc(row.labels.join(' | '))}</option>`).join('');
+  $('headerRow').value = String(data.header_row);
+  $('mappingColumns').innerHTML = data.headers.map((header, i) => `<tr><td>${esc(header || '(blank)')}</td><td><select aria-label="Field for column ${i + 1}" data-column="${i}"><option value="">Ignore</option>${data.fields.map(field => `<option value="${esc(field)}" ${data.mapping[String(i)] === field ? 'selected' : ''}>${esc(label(field))}</option>`).join('')}</select></td></tr>`).join('');
+  $('mappingMessage').textContent = 'Review the header row and every field before approving.';
+  message('Column review ready. The workflow has not started.');
+  $('mappingPanel').scrollIntoView({behavior: 'smooth'});
+}
+async function mappingAction(action) {
+  if (!mappingReview) return;
+  const {jobId, data} = mappingReview;
+  const body = {job_id: jobId, header_row: Number($('headerRow').value)};
+  if (action === 'approve') {
+    body.mapping = Object.fromEntries([...$('mappingColumns').querySelectorAll('select')].map(node => [node.dataset.column, node.value || null]));
+    body.confirm = true;
+  }
+  for (const id of ['suggestMapping', 'approveMapping', 'headerRow', 'cancelMapping']) $(id).disabled = true;
+  loading = true;
+  try {
+    $('mappingMessage').textContent = action === 'suggestions' ? 'Requesting header-only suggestions...' : 'Processing...';
+    const options = jsonPost(body);
+    options.headers['X-Enrollment-Desk'] = 'local';
+    const result = await request('/api/mapping-' + action, options);
+    if (action === 'approve') {
+      const d = isCloud() ? await request('/api/cases/' + result.job_id) : result;
+      mappingReview = null; $('mappingPanel').hidden = true; pendingUpload = null;
+      $('file').value = ''; await load(); detail(d); message('Approved mapping submitted to the validation workflow.');
+    } else {
+      showMapping(action === 'preview' ? result : {...data, mapping: result.mapping}, jobId);
+      if (action === 'suggestions') $('mappingMessage').textContent = 'Suggestions are ready. Check every assignment, edit as needed, then approve.';
+    }
+  } catch (error) { $('mappingMessage').textContent = error.message; $('headerRow').value = String(data.header_row); }
+  finally {
+    loading = false;
+    for (const id of ['suggestMapping', 'approveMapping', 'headerRow', 'cancelMapping']) $(id).disabled = false;
+    updateAuth();
+  }
+}
+$('headerRow').addEventListener('change', () => mappingAction('preview'));
+$('suggestMapping').addEventListener('click', () => { if (confirm('Confirm the selected row contains column labels only. These labels will be sent to Bedrock.')) mappingAction('suggestions'); });
+$('approveMapping').addEventListener('click', () => mappingAction('approve'));
+$('cancelMapping').addEventListener('click', () => { mappingReview = null; pendingUpload = null; $('mappingPanel').hidden = true; message('Review cancelled. No workflow started.'); });
+
+for (const id of ['file', 'company']) $(id).addEventListener('change', () => {
+  if (mappingReview) { mappingReview = null; pendingUpload = null; $('mappingPanel').hidden = true; message('Selection changed. Upload again to review the selected roster.'); }
+});

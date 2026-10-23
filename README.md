@@ -27,7 +27,7 @@ Roster uploaded -> Rules validate -> All clear? --no--> Needs review
 - **Synthetic data with labels** (`synth.py`): 100 requests, about half with real problems, each labeled with the correct values and the exact flags a reviewer should see. These labels are the start of the evaluation suite.
 - **Event log**: every case records what happened, when, and with which rules version.
 
-No AI is in the loop yet; that's phase 2. The baseline it has to beat (or match on clean files) is below.
+Phase 2 manual column-mapping review is available locally and in the deployed AWS app. Bedrock suggestions remain opt-in and always require operator approval. PDFs and email extraction are still planned. The deterministic baseline is below.
 
 ## Web app
 
@@ -37,11 +37,25 @@ Hosting uses private S3 behind CloudFront, Cognito sign-in, a JWT-protected API,
 
 ## Run it locally
 
-Needs Python 3.12+.
+Local development uses Python 3.14.5. AWS Lambda packaging still targets Python 3.12.
+
+For Windows PowerShell, run each command on its own line. Activation is optional when using the environment's Python directly:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m enrollment_desk.web
+```
+
+Open http://127.0.0.1:8080. To activate the environment instead, use `.\.venv\Scripts\Activate.ps1`. If you change Python versions, use a fresh virtual environment; reusing one can leave incompatible compiled dependencies.
+
+For Linux/macOS:
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev]"
 
 pytest -q                                          # unit and workflow tests
 enrollment-desk evaluate data/generated            # parser + rules vs the 100 labeled requests
@@ -121,7 +135,7 @@ data/samples/          a clean and a messy example roster
 
 ## Roadmap
 
-1. **Synthetic data and workflow skeleton** (this phase)
+1. **Synthetic data and workflow skeleton** — completed, with a basic authenticated AWS web interface added early for end-to-end testing.
 2. AI extraction on Amazon Bedrock for PDFs, emails and unknown headers, with source quotes, Guardrails, Prompt Management and a CI evaluation gate
 3. Operations console (React, TanStack Query, shadcn/ui): case list, document beside extracted fields, approve or fix, task-token handoff back to the workflow; Aurora PostgreSQL for case state
 4. Review assistant (RAG over plan documents, LangGraph with read-only MCP tools) and full decision traces with replay
@@ -145,3 +159,38 @@ Open http://127.0.0.1:8080 in your browser. Select a company, upload a CSV or XL
 This is a local simulation using the same workflow rules as the CLI, with a fixed demo date and instantly advanced waits. It uses the in-process insurer simulator, requires no AWS credentials, and stores cases, events, and uploads in `.local/store`. Stop with Ctrl+C. Use `--port 8082` or `--store .local/web-demo` for an alternate port or isolated records. The server binds only to 127.0.0.1 and is intended for local development with synthetic data.
 
 See [AWS web deployment](docs/aws-deployment.md) for the optional Cognito sign-in, authenticated API, private S3/CloudFront hosting, operator company assignments, Windows packaging commands, and rollout smoke tests. Enable hosting explicitly with `enable_web=true`; no AWS resources are created by local runs.
+
+## Column mapping review (phase 2)
+
+Select **Review column mapping before processing** before uploading. Select the actual header row and assign a field or Ignore to each column. **Approve mapping and process** records the source hash, reviewer, assignments and timestamp, then runs the existing rules and insurer workflow. A suggestion never approves a case or activates coverage.
+
+Local manual review works without AWS. To enable Bedrock suggestions in PowerShell:
+
+```powershell
+$env:AWS_PROFILE = 'copilot'
+.\.venv\Scripts\python.exe -m enrollment_desk.web --bedrock --port 8082
+```
+
+Only the operator-selected header labels and existing field assignments enter the Bedrock request. Inspect the selected row before confirming the request; selecting a data row could disclose its cell contents. Suggestions use a direct Sydney Nova model, are validated in code and cached per header row. If Bedrock is unavailable, finish mapping manually. No roster rows are intentionally sent to the model.
+
+AWS rollout additionally requires `enable_bedrock_mapping=true`. It defaults to false and grants only `bedrock:InvokeModel` on the selected direct foundation-model ARN. This implementation does not yet include PDFs/emails, managed Bedrock Guardrails or Prompt Management, or the phase 2 model-quality evaluation gate. The prompt is versioned in source.
+
+### Try manual review while Bedrock is disabled
+
+Run the local web server without `--bedrock`, select Dalisay Software Labs, and download **roster for manual mapping**. Check **Review column mapping before processing**, upload the file, and map its columns in this order:
+
+| Source label | Enrollment field |
+| --- | --- |
+| Payroll reference | employee_id |
+| Given appellation | first_name |
+| Family appellation | last_name |
+| Birth calendar day | birth_date |
+| Recorded biological sex | sex |
+| Coverage kinship | relationship |
+| Linked payroll reference | principal_employee_id |
+| Employment commencement | hire_date |
+| Selected benefit tier | plan_code |
+
+Click **Approve mapping and process**. The synthetic clean roster becomes active only after simulated insurer acknowledgment; its timeline includes **columns approved**. Files with blocking rule findings still stop at **needs review**. The Bedrock button is hidden in manual-only mode, and no model is invoked.
+
+Automated HTTP tests cover unfamiliar-header CSV and Excel uploads, clean and problematic rosters, mandatory approval, recorded reviewer assignments, and safe retries. The deployed AWS app uses `enable_bedrock_mapping=false`; Bedrock remains disabled while model quotas are unavailable.
